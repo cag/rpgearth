@@ -57,3 +57,5 @@ target/
 bin/
 lib64
 pyvenv.cfg
+db.sqlite3
+local_settings.py
