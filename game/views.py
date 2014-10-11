@@ -4,12 +4,15 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 def index(request):
+    def successful_render():
+        return render(request, 'index.html', { 'user': request.user, 'player': request.user.player })
+
     if request.user.is_authenticated():
         # Do something for authenticated users.
-        if hasattr(request.user, 'player'):
-            request.user.player = Player(user=request.user)
+        if not hasattr(request.user, 'player'):
+            p = Player(user=request.user)
             p.save()
-        return render(request, 'index.html', { 'player': request.user.player })
+        return successful_render()
     else:
         # Do something for anonymous users.
         if request.method == 'POST':
@@ -22,7 +25,7 @@ def index(request):
             if user is not None:
                 if user.is_active:
                     login(request, user)
-                    return render(request, 'index.html', {})
+                    return successful_render()
                 else:
                     # Return a 'disabled account' error message
                     return render(request, 'login.html', {})
