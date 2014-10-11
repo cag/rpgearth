@@ -1,15 +1,20 @@
+from .models import Player
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 
 def index(request):
     if request.user.is_authenticated():
         # Do something for authenticated users.
-        return render(request, 'index.html', {})
+        if hasattr(request.user, 'player'):
+            request.user.player = Player(user=request.user)
+            p.save()
+        return render(request, 'index.html', { 'player': request.user.player })
     else:
         # Do something for anonymous users.
         if request.method == 'POST':
-            if not request.POST.get('remember_me', None):
-                request.session.set_expiry(0)
+            # if not request.POST.get('remember_me', None):
+            #     request.session.set_expiry(0)
 
             username = request.POST['username']
             password = request.POST['password']
@@ -20,12 +25,12 @@ def index(request):
                     return render(request, 'index.html', {})
                 else:
                     # Return a 'disabled account' error message
-                    return render(request, 'login.html', { 'request_path': request.path })
+                    return render(request, 'login.html', {})
             else:
                 # Return an 'invalid login' error message.
-                return render(request, 'login.html', { 'request_path': request.path })
+                return render(request, 'login.html', {})
         else:
-            return render(request, 'login.html', { 'request_path': request.path })
+            return render(request, 'login.html', {})
 
 def logout_view(request):
     logout(request)

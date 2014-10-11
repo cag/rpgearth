@@ -2,7 +2,7 @@
 <head></head>
 
 <body>
-<form method="post" action="{{ request_path }}">
+<form method="post" action="{% url 'index' %}">
     {% csrf_token %}
     <p><input type="text" name="username" value="" placeholder="Username"></p>
     <p><input type="password" name="password" value="" placeholder="Password"></p>
