@@ -1,4 +1,0 @@
-rpgearth
-========
-
-Play your world
