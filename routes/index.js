@@ -1,7 +1,7 @@
 module.exports = function(app, passport) {
 
 var router = require('express').Router(),
-    Account = app.get('Account');
+    User = app.get('User');
 
 function renderHomePage(req, res) {
     console.log('render home page');
@@ -32,13 +32,13 @@ router.post('/register', function(req, res, next) {
         confirm_password = req.body.confirm_password;
 
     if(password === confirm_password) {
-        Account.register(username, password, function(err, account) {
+        User.register(username, password, function(err, user) {
             if(err) {
                 return next(err);
-            } else if(!account) {
+            } else if(!user) {
                 return res.redirect('/');
             } else {
-                req.login(account, function(err) {
+                req.login(user, function(err) {
                     if(err) { return next(err); }
                     return res.redirect('/');
                 });
