@@ -35,7 +35,7 @@ io.set('authorization', function(data, accept) {
     });
 });
 
-var GEOLOCATION_DEGREE_BUCKET_DILATION = 1110;//111; // Works out to about 1 sq km near the equator
+var GEOLOCATION_DEGREE_BUCKET_DILATION = 11100;//111; // Works out to about 1 sq km near the equator
 
 io.on('connection', function(socket) {
     var hs = socket.handshake;
