@@ -1,7 +1,8 @@
 var bcrypt = require('bcryptjs');
 
 var express = require('express');
-var session = require('express-session')
+var session = require('express-session'),
+    sessionStore = new session.MemoryStore();
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
@@ -71,7 +72,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.set('session secret', 'keyboard cat');
 
-app.use(session({ name: 'connect.sid', secret: app.get('session secret') }));
+app.use(session({ name: 'connect.sid', store: sessionStore, secret: app.get('session secret') }));
+
+app.set('session store', sessionStore);
 
 app.use(passport.initialize());
 app.use(passport.session());
