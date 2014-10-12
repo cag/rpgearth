@@ -13,7 +13,7 @@ router.get('/', function(req, res) {
         renderHomePage(req, res);
     }
     else {
-        res.render('index', { title: 'rpgearth' });
+        res.render('index', { title: 'blocktalk' });
     }
 });
 
