@@ -1,7 +1,7 @@
-module.exports = function(passport) {
+module.exports = function(app, passport) {
 
-var express = require('express');
-var router = express.Router();
+var router = require('express').Router(),
+    Account = app.get('Account');
 
 function renderHomePage(req, res) {
     console.log('render home page');
@@ -24,7 +24,30 @@ router.post('/',
 router.get('/logout', function(req, res) {
     req.logout();
     res.redirect('/');
-})
+});
+
+router.post('/register', function(req, res, next) {
+    var username = req.body.username,
+        password = req.body.password,
+        confirm_password = req.body.confirm_password;
+
+    if(password === confirm_password) {
+        Account.register(username, password, function(err, account) {
+            if(err) {
+                return next(err);
+            } else if(!account) {
+                return res.redirect('/');
+            } else {
+                req.login(account, function(err) {
+                    if(err) { return next(err); }
+                    return res.redirect('/');
+                });
+            }
+        })
+    } else {
+        res.redirect('/');
+    }
+});
 
 return router;
 

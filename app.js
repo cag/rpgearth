@@ -17,6 +17,7 @@ var knex = require('knex')({
 var bookshelf = require('bookshelf')(knex);
 
 var Account = require('./models/account')(bookshelf);
+app.set('Account', Account);
 
 require('./resetdb')(knex, Account);
 
@@ -55,7 +56,7 @@ passport.deserializeUser(function(id, done) {
 
 var flash = require('connect-flash');
 
-var routes = require('./routes/index')(passport);
+var routes = require('./routes/index')(app, passport);
 var users = require('./routes/users');
 
 // view engine setup

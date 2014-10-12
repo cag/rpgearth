@@ -6,6 +6,7 @@ module.exports = function(http, app) {
 var io = require('socket.io')(http),
     Session = require('express-session').Session,
     sessionStore = app.get('session store');
+    Account = app.get('Account');
 
 function sessionFromCookie(ck, callback) {
     var sessionID;
@@ -29,7 +30,6 @@ io.set('authorization', function(data, accept) {
         } else if(!session) {
             accept("Could not find session", false);
         } else {
-            //data.session = new Session(data, session);
             accept(null, true);
         }
     });
@@ -38,12 +38,23 @@ io.set('authorization', function(data, accept) {
 io.on('connection', function(socket) {
     var hs = socket.handshake;
     console.log('handshake: ' + JSON.stringify(hs));
-    console.log('a user connected');
-    socket.on('disconnect', function() {
-        console.log('user disconnected');
-    });
-    socket.on('chat message', function(msg) {
-        console.log('message: ' + msg);
+
+    sessionFromCookie(hs.headers.cookie, function(err, s) {
+        session = new Session(hs, s);
+
+        new Account({ id: session.passport.user }).fetch().then(function(account) {
+            if(account) {
+                console.log(account.get('username') + ' connected');
+
+                socket.on('disconnect', function() {
+                    console.log(account.get('username') + ' disconnected');
+                });
+                socket.on('chat message', function(msg) {
+                    console.log(account.get('username') + ': ' + msg);
+                });
+            } else console.error("Could not find user " + session.passport.user);
+        });
+
     });
 });
 
