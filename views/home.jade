@@ -8,7 +8,8 @@ block header
     $(function() {
       var socket = io();
       var message_check_buffer = [],
-        message_duplicate_guards = {};
+        message_duplicate_guards = {},
+        joined_users = {};
 
       if (Modernizr.geolocation) {
         navigator.geolocation.watchPosition(function(position) {
@@ -44,21 +45,48 @@ block header
 
       socket.on('join room', function(msg) {
         console.log(JSON.stringify(msg));
-        if(!message_duplicate_guards[msg.duplicate_guard]) {
-          message_duplicate_guards[msg.duplicate_guard] = true;
-          message_check_buffer.push(msg.duplicate_guard);
-          if(message_check_buffer.length > 10)
-            delete message_duplicate_guards[message_check_buffer.shift()];
+        if(!(msg.username in joined_users)) {
+          joined_users[msg.username] = true;
           $('#messages')
             .append($('<li>')
               .append(
                 $('<span>').text(msg.username + ' joined.')));
+
         }
+
+        //- if(!message_duplicate_guards[msg.duplicate_guard]) {
+        //-   message_duplicate_guards[msg.duplicate_guard] = true;
+        //-   message_check_buffer.push(msg.duplicate_guard);
+        //-   if(message_check_buffer.length > 10)
+        //-     delete message_duplicate_guards[message_check_buffer.shift()];
+
+        //- }
+      });
+
+      socket.on('leave room', function(msg) {
+        console.log(JSON.stringify(msg));
+        if(msg.username in joined_users) {
+          delete joined_users[msg.username];
+          $('#messages')
+            .append($('<li>')
+              .append(
+                $('<span>').text(msg.username + ' left.')));
+        }
+
+        //- if(!message_duplicate_guards[msg.duplicate_guard]) {
+        //-   message_duplicate_guards[msg.duplicate_guard] = true;
+        //-   message_check_buffer.push(msg.duplicate_guard);
+        //-   if(message_check_buffer.length > 10)
+        //-     delete message_duplicate_guards[message_check_buffer.shift()];
+        //-   $('#messages')
+        //-     .append($('<li>')
+        //-       .append(
+        //-         $('<span>').text(msg.username + ' joined.')));
+        //- }
       });
     });
 
 block content
-  h1= title
   ul#messages
   form
     input#m(autocomplete="off")
