@@ -35,7 +35,7 @@ io.set('authorization', function(data, accept) {
     });
 });
 
-var GEOLOCATION_DEGREE_BUCKET_DILATION = 111; // Works out to about 1 sq km near the equator
+var GEOLOCATION_DEGREE_BUCKET_DILATION = 1110;//111; // Works out to about 1 sq km near the equator
 
 io.on('connection', function(socket) {
     var hs = socket.handshake;
@@ -58,51 +58,58 @@ io.on('connection', function(socket) {
 
                 function fixLatitudeBucket(v) { return v % (180 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
                 function fixLongitudeBucket(v) { return v % (360 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
-
-                function emitGeolocationBuckets(ev, obj) {
-                    if(latitude_bucket !== null && longitude_bucket !== null)
+                function forEachBucketInVicinity(lat_b, long_b, callback) {
+                    if(lat_b !== null && long_b !== null)
                         for(var i = -1; i < 2; i++) {
                             for(var j = -1; j < 2; j++) {
-                                io.to(fixLatitudeBucket(latitude_bucket + i) + ',' + fixLongitudeBucket(longitude_bucket + j))
-                                    .emit(ev, obj);
+                                var bucket = fixLatitudeBucket(lat_b + i) + ',' + fixLongitudeBucket(long_b + j);
+                                callback(bucket);
                             }
                         }
                     else
-                        io.to(latitude_bucket + ',' + longitude_bucket).emit(ev, obj);
+                        callback(lat_b + ',' + long_b);
+                }
+
+                function emitGeolocationBuckets(ev, obj) {
+                    forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket) {
+                        io.to(bucket).emit(ev, obj);
+                    });
                 }
 
                 function joinGeolocationBuckets() {
                     console.log('joining at ' + latitude_bucket + ',' + longitude_bucket +
                         '(' + latitude + ',' + longitude + ')');
-                    if(latitude_bucket !== null && longitude_bucket !== null)
-                        for(var i = -1; i < 2; i++) {
-                            for(var j = -1; j < 2; j++) {
-                                socket.join(fixLatitudeBucket(latitude_bucket + i) + ',' + fixLongitudeBucket(longitude_bucket + j));
-                            }
-                        }
-                    else
-                        socket.join(latitude_bucket + ',' + longitude_bucket);
+                    forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket) {
+                        socket.join(bucket);
+                    });
                 }
 
                 function shiftGeolocationBuckets() {
                     console.log('shifting from ' + last_latitude_bucket + ',' + last_longitude_bucket);
-                    if(latitude_bucket !== null && longitude_bucket !== null)
-                        for(var i = -1; i < 2; i++) {
-                            for(var j = -1; j < 2; j++) {
-                                socket.leave(fixLatitudeBucket(last_latitude_bucket + i) + ',' + fixLongitudeBucket(last_longitude_bucket + j));
-                            }
+                    forEachBucketInVicinity(last_latitude_bucket, last_longitude_bucket, function(bucket) {
+                        if(Math.abs(latitude_bucket - last_latitude_bucket) > 1 || Math.abs(longitude_bucket - last_longitude_bucket) > 1) {
+                            console.log('leaving ' + bucket);
+                            io.to(bucket).emit('leave room', username);
+                            socket.leave(bucket);
                         }
-                    else
-                        socket.leave(latitude_bucket + ',' + longitude_bucket);
-                    joinGeolocationBuckets();
+                    });
+                    forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket) {
+                        if(Math.abs(latitude_bucket - last_latitude_bucket) > 1 || Math.abs(longitude_bucket - last_longitude_bucket) > 1) {
+                            console.log('joining ' + bucket);
+                            socket.join(bucket);
+                            io.to(bucket).emit('join room', username);
+                        }
+                    });
                 }
 
                 joinGeolocationBuckets();
+                emitGeolocationBuckets('join room', username);
 
                 console.log(username + ' connected');
 
                 socket.on('disconnect', function() {
                     console.log(username + ' disconnected');
+                    emitGeolocationBuckets('join room', username);
                 });
                 socket.on('chat message', function(msg_body) {
                     console.log(username + ': ' + msg_body);
