@@ -1,6 +1,8 @@
 var cookie = require('cookie'),
     cookieParser = require('cookie-parser');
 
+var crypto = require('crypto');
+
 module.exports = function(http, app) {
 
 var io = require('socket.io')(http),
@@ -36,6 +38,7 @@ io.set('authorization', function(data, accept) {
 });
 
 var GEOLOCATION_DEGREE_BUCKET_DILATION = 1110;//111; // Works out to about 1 sq km near the equator
+var MAX_NUM_BUCKETS_AWAY = 1;
 
 io.on('connection', function(socket) {
     var hs = socket.handshake;
@@ -61,8 +64,8 @@ io.on('connection', function(socket) {
 
                 function forEachBucketInVicinity(lat_b, long_b, callback) {
                     if(lat_b !== null && long_b !== null)
-                        for(var i = -1; i < 2; i++) {
-                            for(var j = -1; j < 2; j++) {
+                        for(var i = -MAX_NUM_BUCKETS_AWAY; i <= MAX_NUM_BUCKETS_AWAY; i++) {
+                            for(var j = -MAX_NUM_BUCKETS_AWAY; j <= MAX_NUM_BUCKETS_AWAY; j++) {
                                 var lat_i = lat_b + i,
                                     long_j = long_b + j,
                                     bucket = fixLatitudeBucket(lat_i) + ',' + fixLongitudeBucket(long_j);
@@ -90,17 +93,17 @@ io.on('connection', function(socket) {
                 function shiftGeolocationBuckets() {
                     console.log('shifting from ' + last_latitude_bucket + ',' + last_longitude_bucket);
                     forEachBucketInVicinity(last_latitude_bucket, last_longitude_bucket, function(bucket, lat_i, long_j) {
-                        if(Math.abs(latitude_bucket - lat_i) > 1 || Math.abs(longitude_bucket - long_j) > 1) {
+                        if(Math.abs(latitude_bucket - lat_i) > MAX_NUM_BUCKETS_AWAY || Math.abs(longitude_bucket - long_j) > MAX_NUM_BUCKETS_AWAY) {
                             console.log('leaving ' + bucket);
-                            io.to(bucket).emit('leave room', username);
+                            io.to(bucket).emit('leave room', { username: username, duplicate_guard: crypto.randomBytes(10).toString('hex') });
                             socket.leave(bucket);
                         }
                     });
                     forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket, lat_i, long_j) {
-                        if(Math.abs(lat_i - last_latitude_bucket) > 1 || Math.abs(long_j - last_longitude_bucket) > 1) {
+                        if(Math.abs(lat_i - last_latitude_bucket) > MAX_NUM_BUCKETS_AWAY || Math.abs(long_j - last_longitude_bucket) > MAX_NUM_BUCKETS_AWAY) {
                             console.log('joining ' + bucket);
                             socket.join(bucket);
-                            io.to(bucket).emit('join room', username);
+                            io.to(bucket).emit('join room', { username: username, duplicate_guard: crypto.randomBytes(10).toString('hex') });
                         }
                     });
                     last_latitude_bucket = latitude_bucket;
@@ -108,7 +111,7 @@ io.on('connection', function(socket) {
                 }
 
                 joinGeolocationBuckets();
-                emitGeolocationBuckets('join room', username);
+                emitGeolocationBuckets('join room', { username: username, duplicate_guard: crypto.randomBytes(10).toString('hex') });
 
                 console.log(username + ' connected');
 
@@ -118,7 +121,7 @@ io.on('connection', function(socket) {
                 });
                 socket.on('chat message', function(msg_body) {
                     console.log(username + ': ' + msg_body);
-                    emitGeolocationBuckets('chat message', { username: username, body: msg_body });
+                    emitGeolocationBuckets('chat message', { username: username, body: msg_body, duplicate_guard: crypto.randomBytes(10).toString('hex') });
                 });
                 socket.on('geolocation', function(position) {
                     if(position && position.coords) {

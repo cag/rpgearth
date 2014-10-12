@@ -7,12 +7,13 @@ block header
   script.
     $(function() {
       var socket = io();
+      var message_check_buffer = [],
+        message_duplicate_guards = {};
 
       if (Modernizr.geolocation) {
         navigator.geolocation.watchPosition(function(position) {
           console.log(position);
           socket.emit('geolocation', position);
-          setTimeout(emit_geolocation, 1000);
         }, function(error) {
           if(error.code === 1) {
             // user sez no
@@ -27,11 +28,31 @@ block header
       });
 
       socket.on('chat message', function(msg) {
-        $('#messages')
-          .append($('<li>')
-          .append(
-            $('<span>').text(msg.username),
-            $('<span>').text(msg.body)));
+        console.log(JSON.stringify(msg));
+        if(!message_duplicate_guards[msg.duplicate_guard]) {
+          message_duplicate_guards[msg.duplicate_guard] = true;
+          message_check_buffer.push(msg.duplicate_guard);
+          if(message_check_buffer.length > 10)
+            delete message_duplicate_guards[message_check_buffer.shift()];
+          $('#messages')
+            .append($('<li>')
+              .append(
+                $('<span>').text(msg.username),
+                $('<span>').text(msg.body)));
+        }
+      });
+
+      socket.on('join room', function(msg) {
+        if(!message_duplicate_guards[msg.duplicate_guard]) {
+          message_duplicate_guards[msg.duplicate_guard] = true;
+          message_check_buffer.push(msg.duplicate_guard);
+          if(message_check_buffer.length > 10)
+            delete message_duplicate_guards[message_check_buffer.shift()];
+          $('#messages')
+            .append($('<li>')
+              .append(
+                $('<span>').text(msg.username + ' joined.')));
+        }
       });
     });
 
