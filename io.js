@@ -65,8 +65,11 @@ io.on('connection', function(socket) {
                             last_latitude_bucket = user.get('latitude_bucket'),
                             last_longitude_bucket = user.get('longitude_bucket');
 
-                        console.log(username + ' (' + last_latitude + ',' + last_longitude +
-                            ') -> (' + position.coords.latitude + ',' + position.coords.longitude + ')');
+                        console.log(username +
+                            ' (' + last_latitude + ',' + last_longitude +
+                            ') -> (' + latitude + ',' + longitude + ')' +
+                            ' (' + last_latitude_bucket + ',' + last_longitude_bucket +
+                            ') -> (' + latitude_bucket + ',' + longitude_bucket + ')');
 
                         user.set('latitude', latitude);
                         user.set('longitude', longitude);
