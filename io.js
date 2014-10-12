@@ -100,6 +100,8 @@ io.on('connection', function(socket) {
                             io.to(bucket).emit('join room', username);
                         }
                     });
+                    last_latitude_bucket = latitude_bucket;
+                    last_longitude_bucket = longitude_bucket;                    
                 }
 
                 joinGeolocationBuckets();
