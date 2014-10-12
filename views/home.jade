@@ -1,4 +1,21 @@
 extends layout
 
+block header
+  script(src="/socket.io/socket.io.js")
+  script(src="http://code.jquery.com/jquery-2.1.1.js")
+  script.
+    $(function() {
+      var socket = io();
+      $('form').submit(function(e) {
+        socket.emit('chat message', $('#m').val());
+        $('#m').val('');
+        e.preventDefault();
+      });
+    });
+
 block content
   h1= title
+  ul#messages
+  form
+    input#m(autocomplete="off")
+    input(type="submit" value="Send")
