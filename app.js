@@ -1,21 +1,61 @@
+var bcrypt = require('bcryptjs');
+
 var express = require('express');
+var session = require('express-session')
 var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
-
 var app = express();
 var knex = require('knex')({
-  client: 'pg',
-  connection: process.env.DATABASE_URL
+    client: 'pg',
+    connection: process.env.DATABASE_URL
 });
 var bookshelf = require('bookshelf')(knex);
 
-app.set('bookshelf', bookshelf);
+var Account = require('./models/account')(bookshelf);
+
+require('./resetdb')(knex, Account);
+
+var passport = require('passport'),
+    LocalStrategy = require('passport-local').Strategy;
+
+passport.use(new LocalStrategy(
+    function(username, password, done) {
+        new Account({ username: username }).fetch().then(function(account) {
+            if (!account) {
+                return done(null, false, { message: 'Incorrect username.' });
+            }
+            account.validatePassword(password, function(err, res) {
+                if(err) {
+                    console.error(err);
+                    return done(null, false, { message: err });
+                }
+                if(res) {
+                    return done(null, account);
+                }
+                return done(null, false, { message: 'Incorrect password.' });
+            });
+        });
+    }
+));
+
+passport.serializeUser(function(account, done) {
+  done(null, account.id);
+});
+
+passport.deserializeUser(function(id, done) {
+    new Account({ id: id }).fetch().then(function(err, user) {
+        done(err, user);
+    });
+});
+
+var flash = require('connect-flash');
+
+var routes = require('./routes/index')(passport);
+var users = require('./routes/users');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -28,6 +68,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(session({secret: 'keyboard cat'}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use(flash());
 
 app.use('/', routes);
 app.use('/users', users);
