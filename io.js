@@ -56,8 +56,8 @@ io.on('connection', function(socket) {
                     latitude_bucket = last_latitude_bucket,
                     longitude_bucket = last_longitude_bucket;
 
-                function fixLatitudeBucket(v) { return v % (360 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
-                function fixLongitudeBucket(v) { return v % (180 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
+                function fixLatitudeBucket(v) { return v % (180 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
+                function fixLongitudeBucket(v) { return v % (360 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
 
                 function emitGeolocationBuckets(ev, obj) {
                     if(latitude_bucket !== null && longitude_bucket !== null)
@@ -112,8 +112,8 @@ io.on('connection', function(socket) {
                     if(position && position.coords) {
                         latitude = position.coords.latitude;
                         longitude = position.coords.longitude;
-                        latitude_bucket = Math.floor((latitude + 180) * GEOLOCATION_DEGREE_BUCKET_DILATION);
-                        longitude_bucket = Math.floor((longitude + 90) * GEOLOCATION_DEGREE_BUCKET_DILATION);
+                        latitude_bucket = Math.floor((latitude + 90) * GEOLOCATION_DEGREE_BUCKET_DILATION);
+                        longitude_bucket = Math.floor((longitude + 180) * GEOLOCATION_DEGREE_BUCKET_DILATION);
 
                         if(last_latitude_bucket !== latitude_bucket || last_longitude_bucket !== longitude_bucket)
                             shiftGeolocationBuckets();
