@@ -9,7 +9,8 @@ block header
       var socket = io();
       var message_check_buffer = [],
         message_duplicate_guards = {},
-        joined_users = {};
+        joined_users = {},
+        active_users = {};
 
       if (Modernizr.geolocation) {
         navigator.geolocation.watchPosition(function(position) {
@@ -50,11 +51,12 @@ block header
           clearTimeout(joined_users[msg.username]);
          }
           joined_users[msg.username] = setTimeout(function() {
-                      $('#messages')
-                        .append($('<li>')
-                          .append(
-                            $('<span>').text(msg.username + ' joined.')));
-                    }, 100);
+                if(!(msg.username in active_users)) {
+                                      $('#messages')
+                                        .append($('<li>')
+                                          .append(
+                                            $('<span>').text(msg.username + ' joined.')));  active_users[msg.username] = true; 
+                                    }}, 100);
 
         //- if(!message_duplicate_guards[msg.duplicate_guard]) {
         //-   message_duplicate_guards[msg.duplicate_guard] = true;
@@ -72,10 +74,11 @@ block header
           clearTimeout(joined_users[msg.username]);
          }
           joined_users[msg.username] = setTimeout(function() {
+                if((msg.username in active_users)) {
                       $('#messages')
                         .append($('<li>')
                           .append(
-                            $('<span>').text(msg.username + ' left.')));
+                            $('<span>').text(msg.username + ' left.'))); delete active_users[msg.username]; }
                     }, 100);
 
         //- if(!message_duplicate_guards[msg.duplicate_guard]) {
