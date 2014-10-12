@@ -95,7 +95,7 @@ io.on('connection', function(socket) {
                     forEachBucketInVicinity(last_latitude_bucket, last_longitude_bucket, function(bucket, lat_i, long_j) {
                         if(Math.abs(latitude_bucket - lat_i) > MAX_NUM_BUCKETS_AWAY || Math.abs(longitude_bucket - long_j) > MAX_NUM_BUCKETS_AWAY) {
                             console.log('leaving ' + bucket);
-                            io.to(bucket).emit('leave room', { username: username, duplicate_guard: crypto.randomBytes(10).toString('hex') });
+                            io.to(bucket).emit('leave room', { username: username });
                             socket.leave(bucket);
                         }
                     });
@@ -103,7 +103,7 @@ io.on('connection', function(socket) {
                         if(Math.abs(lat_i - last_latitude_bucket) > MAX_NUM_BUCKETS_AWAY || Math.abs(long_j - last_longitude_bucket) > MAX_NUM_BUCKETS_AWAY) {
                             console.log('joining ' + bucket);
                             socket.join(bucket);
-                            io.to(bucket).emit('join room', { username: username, duplicate_guard: crypto.randomBytes(10).toString('hex') });
+                            io.to(bucket).emit('join room', { username: username });
                         }
                     });
                     last_latitude_bucket = latitude_bucket;
@@ -117,7 +117,7 @@ io.on('connection', function(socket) {
 
                 socket.on('disconnect', function() {
                     console.log(username + ' disconnected');
-                    emitGeolocationBuckets('join room', username);
+                    emitGeolocationBuckets('leave room', { username: username, duplicate_guard: crypto.randomBytes(10).toString('hex') });
                 });
                 socket.on('chat message', function(msg_body) {
                     console.log(username + ': ' + msg_body);
