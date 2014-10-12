@@ -6,7 +6,7 @@ module.exports = function(http, app) {
 var io = require('socket.io')(http),
     Session = require('express-session').Session,
     sessionStore = app.get('session store');
-    Account = app.get('Account');
+    User = app.get('User');
 
 function sessionFromCookie(ck, callback) {
     var sessionID;
@@ -42,21 +42,31 @@ io.on('connection', function(socket) {
     sessionFromCookie(hs.headers.cookie, function(err, s) {
         session = new Session(hs, s);
 
-        new Account({ id: session.passport.user }).fetch().then(function(account) {
-            if(account) {
-                console.log(account.get('username') + ' connected');
+        new User({ id: session.passport.user }).fetch().then(function(user) {
+            if(user) {
+                var username = user.get('username')
+                console.log(username + ' connected');
 
                 socket.on('disconnect', function() {
-                    console.log(account.get('username') + ' disconnected');
+                    console.log(username + ' disconnected');
                 });
-                socket.on('chat message', function(msg) {
-                    console.log(account.get('username') + ': ' + msg);
+                socket.on('chat message', function(msg_body) {
+                    console.log(username + ': ' + msg_body);
+                    io.emit('chat message', { username: username, body: msg_body });
                 });
                 socket.on('geolocation', function(position) {
-                    console.log(account.get('username') + ' @ ' + JSON.stringify(position));
+                    if(position && position.coords) {
+                        var last_latitude = user.get('latitude'),
+                            last_longitude = user.get('longitude');
+
+                        console.log(username + ' (' + last_latitude + ',' + last_longitude +
+                            ') -> (' + position.coords.latitude + ',' + position.coords.longitude + ')');
+                        
+                        user.set('latitude', position.coords.latitude);
+                        user.set('longitude', position.coords.longitude);
+                        user.save();
+                    }
                 });
-
-
             } else console.error("Could not find user " + session.passport.user);
         });
 

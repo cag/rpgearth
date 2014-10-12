@@ -25,6 +25,14 @@ block header
         $('#m').val('');
         e.preventDefault();
       });
+
+      socket.on('chat message', function(msg) {
+        $('#messages')
+          .append($('<li>')
+          .append(
+            $('<span>').text(msg.username),
+            $('<span>').text(msg.body)));
+      });
     });
 
 block content

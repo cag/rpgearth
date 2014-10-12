@@ -16,27 +16,27 @@ var knex = require('knex')({
 });
 var bookshelf = require('bookshelf')(knex);
 
-var Account = require('./models/account')(bookshelf);
-app.set('Account', Account);
+var User = require('./models/user')(bookshelf);
+app.set('User', User);
 
-require('./resetdb')(knex, Account);
+require('./resetdb')(knex, User);
 
 var passport = require('passport'),
     LocalStrategy = require('passport-local').Strategy;
 
 passport.use(new LocalStrategy(
     function(username, password, done) {
-        new Account({ username: username }).fetch().then(function(account) {
-            if (!account) {
+        new User({ username: username }).fetch().then(function(user) {
+            if (!user) {
                 return done(null, false, { message: 'Incorrect username.' });
             }
-            account.validatePassword(password, function(err, res) {
+            user.validatePassword(password, function(err, res) {
                 if(err) {
                     console.error(err);
                     return done(null, false, { message: err });
                 }
                 if(res) {
-                    return done(null, account);
+                    return done(null, user);
                 }
                 return done(null, false, { message: 'Incorrect password.' });
             });
@@ -44,13 +44,13 @@ passport.use(new LocalStrategy(
     }
 ));
 
-passport.serializeUser(function(account, done) {
-    done(null, account.get('id'));
+passport.serializeUser(function(user, done) {
+    done(null, user.get('id'));
 });
 
 passport.deserializeUser(function(id, done) {
-    new Account({ id: id }).fetch().then(function(account) {
-        done(null, account);
+    new User({ id: id }).fetch().then(function(user) {
+        done(null, user);
     });
 });
 

@@ -2,8 +2,8 @@ var bcrypt = require('bcryptjs');
 
 module.exports = function(bookshelf) {
 
-    var Account = bookshelf.Model.extend({
-        tableName: 'accounts',
+    var User = bookshelf.Model.extend({
+        tableName: 'users',
         
         validatePassword: function(password, callback) {
             bcrypt.compare(password, this.get('password_hash'), callback);
@@ -13,16 +13,16 @@ module.exports = function(bookshelf) {
 
         register: function(username, password, callback) {
             bcrypt.hash(password, 10, function(err, hash) {
-                new Account({ username: username, password_hash: hash })
+                new User({ username: username, password_hash: hash })
                     .save()
-                    .then(function(account) {
-                        if(callback) callback(null, account);
+                    .then(function(user) {
+                        if(callback) callback(null, user);
                     });
             });
         }
 
     });
 
-    return Account;
+    return User;
 
 };

@@ -1,15 +1,17 @@
 var bcrypt = require('bcryptjs');
 
-module.exports = function(knex, Account) {
+module.exports = function(knex, User) {
 
-    knex.schema.dropTableIfExists('accounts').then(function() {
-        knex.schema.createTable('accounts', function(t) {
+    knex.schema.dropTableIfExists('users').then(function() {
+        knex.schema.createTable('users', function(t) {
             t.increments();
             t.string('username').unique();
             t.string('password_hash');
+            t.float('latitude');
+            t.float('longitude');
             t.timestamps();
         }).then(function() {
-            Account.register('alan', 'bacon');
+            User.register('alan', 'bacon');
         });
     });
 
