@@ -72,7 +72,8 @@ io.on('connection', function(socket) {
                 }
 
                 function joinGeolocationBuckets() {
-                    console.log('joining at ' + latitude_bucket + ',' + longitude_bucket);
+                    console.log('joining at ' + latitude_bucket + ',' + longitude_bucket +
+                        '(' + latitude + ',' + longitude + ')');
                     if(latitude_bucket !== null && longitude_bucket !== null)
                         for(var i = -1; i < 2; i++) {
                             for(var j = -1; j < 2; j++) {
@@ -84,9 +85,7 @@ io.on('connection', function(socket) {
                 }
 
                 function shiftGeolocationBuckets() {
-                    console.log('shifting from ' +
-                        last_latitude_bucket + ',' + last_longitude_bucket + ' to ' +
-                        latitude_bucket + ',' + longitude_bucket);
+                    console.log('shifting from ' + last_latitude_bucket + ',' + last_longitude_bucket);
                     if(latitude_bucket !== null && longitude_bucket !== null)
                         for(var i = -1; i < 2; i++) {
                             for(var j = -1; j < 2; j++) {
@@ -120,10 +119,8 @@ io.on('connection', function(socket) {
                             shiftGeolocationBuckets();
 
                         console.log(username +
-                            // ' (' + last_latitude + ',' + last_longitude +
-                            // ') -> (' + latitude + ',' + longitude + ')' +
-                            ' (' + last_latitude_bucket + ',' + last_longitude_bucket +
-                            ') -> (' + latitude_bucket + ',' + longitude_bucket + ')');
+                            ' (' + last_latitude + ',' + last_longitude +
+                            ') -> (' + latitude + ',' + longitude + ')');
 
                         user.set('latitude', latitude);
                         user.set('longitude', longitude);
