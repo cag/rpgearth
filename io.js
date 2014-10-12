@@ -91,19 +91,21 @@ io.on('connection', function(socket) {
                 }
 
                 function shiftGeolocationBuckets() {
+                    var duplicate_guard = crypto.randomBytes(10).toString('hex');
                     console.log('shifting from ' + last_latitude_bucket + ',' + last_longitude_bucket);
                     forEachBucketInVicinity(last_latitude_bucket, last_longitude_bucket, function(bucket, lat_i, long_j) {
                         if(Math.abs(latitude_bucket - lat_i) > MAX_NUM_BUCKETS_AWAY || Math.abs(longitude_bucket - long_j) > MAX_NUM_BUCKETS_AWAY) {
                             console.log('leaving ' + bucket);
-                            io.to(bucket).emit('leave room', { username: username });
+                            io.to(bucket).emit('leave room', { username: username, duplicate_guard: duplicate_guard });
                             socket.leave(bucket);
                         }
                     });
+                    duplicate_guard = crypto.randomBytes(10).toString('hex');
                     forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket, lat_i, long_j) {
                         if(Math.abs(lat_i - last_latitude_bucket) > MAX_NUM_BUCKETS_AWAY || Math.abs(long_j - last_longitude_bucket) > MAX_NUM_BUCKETS_AWAY) {
                             console.log('joining ' + bucket);
                             socket.join(bucket);
-                            io.to(bucket).emit('join room', { username: username });
+                            io.to(bucket).emit('join room', { username: username, duplicate_guard: duplicate_guard });
                         }
                     });
                     last_latitude_bucket = latitude_bucket;
