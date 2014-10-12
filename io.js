@@ -53,7 +53,7 @@ io.on('connection', function(socket) {
                     console.log(account.get('username') + ': ' + msg);
                 });
                 socket.on('geolocation', function(position) {
-                    console.log(account.get('username') + ' @ ' + position);
+                    console.log(account.get('username') + ' @ ' + JSON.stringify(position));
                 });
 
 
