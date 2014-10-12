@@ -40,7 +40,7 @@ block header
           $('#messages')
             .append($('<li>')
               .append(
-                $('<span>').text(msg.username),
+                $('<span>').text(msg.username + ': '),
                 $('<span>').text(msg.body)));
         }
       });
@@ -59,13 +59,6 @@ block header
                                             $('<span>').text(msg.username + ' joined.')));  active_users[msg.username] = true; 
                                     }}, 100);
 
-        //- if(!message_duplicate_guards[msg.duplicate_guard]) {
-        //-   message_duplicate_guards[msg.duplicate_guard] = true;
-        //-   message_check_buffer.push(msg.duplicate_guard);
-        //-   if(message_check_buffer.length > 10)
-        //-     delete message_duplicate_guards[message_check_buffer.shift()];
-
-        //- }
       });
 
       socket.on('leave room', function(msg) {
@@ -82,16 +75,6 @@ block header
                             $('<span>').text(msg.username + ' left.'))); delete active_users[msg.username]; }
                     }, 100);
 
-        //- if(!message_duplicate_guards[msg.duplicate_guard]) {
-        //-   message_duplicate_guards[msg.duplicate_guard] = true;
-        //-   message_check_buffer.push(msg.duplicate_guard);
-        //-   if(message_check_buffer.length > 10)
-        //-     delete message_duplicate_guards[message_check_buffer.shift()];
-        //-   $('#messages')
-        //-     .append($('<li>')
-        //-       .append(
-        //-         $('<span>').text(msg.username + ' joined.')));
-        //- }
       });
     });
 

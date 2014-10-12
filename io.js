@@ -87,6 +87,7 @@ io.on('connection', function(socket) {
                         '(' + latitude + ',' + longitude + ')');
                     forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket) {
                         socket.join(bucket);
+                        //if()
                     });
                 }
 
