@@ -96,7 +96,7 @@ io.on('connection', function(socket) {
                             socket.leave(bucket);
                         }
                     });
-                    forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket) {
+                    forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket, lat_i, long_j) {
                         if(Math.abs(lat_i - last_latitude_bucket) > 1 || Math.abs(long_j - last_longitude_bucket) > 1) {
                             console.log('joining ' + bucket);
                             socket.join(bucket);
