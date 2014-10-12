@@ -2,10 +2,24 @@ extends layout
 
 block header
   script(src="/socket.io/socket.io.js")
+  script(src="/javascripts/modernizr.js")
   script(src="http://code.jquery.com/jquery-2.1.1.js")
   script.
     $(function() {
       var socket = io();
+
+      //setInterval(function() {
+        if (Modernizr.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(position) {
+            var latitude = position.coords.latitude,
+              longitude = position.coords.longitude;
+              timestamp = position.timestamp;
+
+            socket.emit('geolocation', JSON.stringify(position))
+          });
+        }
+      //}, 1000);
+
       $('form').submit(function(e) {
         socket.emit('chat message', $('#m').val());
         $('#m').val('');

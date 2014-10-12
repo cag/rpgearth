@@ -52,6 +52,11 @@ io.on('connection', function(socket) {
                 socket.on('chat message', function(msg) {
                     console.log(account.get('username') + ': ' + msg);
                 });
+                socket.on('geolocation', function(position) {
+                    console.log(account.get('username') + ' @ ' + position);
+                });
+
+
             } else console.error("Could not find user " + session.passport.user);
         });
 
