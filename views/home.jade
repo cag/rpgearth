@@ -45,14 +45,16 @@ block header
 
       socket.on('join room', function(msg) {
         console.log(JSON.stringify(msg));
-        if(!(msg.username in joined_users)) {
-          joined_users[msg.username] = true;
-          $('#messages')
-            .append($('<li>')
-              .append(
-                $('<span>').text(msg.username + ' joined.')));
-
-        }
+        if(msg.username in joined_users)
+         {
+          clearTimeout(joined_users[msg.username]);
+         }
+          joined_users[msg.username] = setTimeout(function() {
+                      $('#messages')
+                        .append($('<li>')
+                          .append(
+                            $('<span>').text(msg.username + ' joined.')));
+                    }, 100);
 
         //- if(!message_duplicate_guards[msg.duplicate_guard]) {
         //-   message_duplicate_guards[msg.duplicate_guard] = true;
@@ -65,13 +67,16 @@ block header
 
       socket.on('leave room', function(msg) {
         console.log(JSON.stringify(msg));
-        if(msg.username in joined_users) {
-          delete joined_users[msg.username];
-          $('#messages')
-            .append($('<li>')
-              .append(
-                $('<span>').text(msg.username + ' left.')));
-        }
+        if(msg.username in joined_users)
+         {
+          clearTimeout(joined_users[msg.username]);
+         }
+          joined_users[msg.username] = setTimeout(function() {
+                      $('#messages')
+                        .append($('<li>')
+                          .append(
+                            $('<span>').text(msg.username + ' left.')));
+                    }, 100);
 
         //- if(!message_duplicate_guards[msg.duplicate_guard]) {
         //-   message_duplicate_guards[msg.duplicate_guard] = true;
