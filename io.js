@@ -35,7 +35,7 @@ io.set('authorization', function(data, accept) {
     });
 });
 
-var GEOLOCATION_DEGREE_BUCKET_DILATION = 11100;//111; // Works out to about 1 sq km near the equator
+var GEOLOCATION_DEGREE_BUCKET_DILATION = 1110;//111; // Works out to about 1 sq km near the equator
 
 io.on('connection', function(socket) {
     var hs = socket.handshake;
@@ -58,7 +58,7 @@ io.on('connection', function(socket) {
 
                 function fixLatitudeBucket(v) { return v % (180 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
                 function fixLongitudeBucket(v) { return v % (360 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
-                
+
                 function forEachBucketInVicinity(lat_b, long_b, callback) {
                     if(lat_b !== null && long_b !== null)
                         for(var i = -1; i < 2; i++) {
