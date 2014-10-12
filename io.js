@@ -56,14 +56,22 @@ io.on('connection', function(socket) {
                 });
                 socket.on('geolocation', function(position) {
                     if(position && position.coords) {
-                        var last_latitude = user.get('latitude'),
-                            last_longitude = user.get('longitude');
+                        var latitude = position.coords.latitude,
+                            longitude = position.coords.longitude,
+                            last_latitude = user.get('latitude'),
+                            last_longitude = user.get('longitude'),
+                            latitude_bucket = Math.floor((latitude + 360) * 111),
+                            longitude_bucket = Math.floor((longitude + 360) * 111),
+                            last_latitude_bucket = user.get('latitude_bucket'),
+                            last_longitude_bucket = user.get('longitude_bucket');
 
                         console.log(username + ' (' + last_latitude + ',' + last_longitude +
                             ') -> (' + position.coords.latitude + ',' + position.coords.longitude + ')');
-                        
-                        user.set('latitude', position.coords.latitude);
-                        user.set('longitude', position.coords.longitude);
+
+                        user.set('latitude', latitude);
+                        user.set('longitude', longitude);
+                        user.set('latitude_bucket', latitude_bucket);
+                        user.set('longitude_bucket', longitude_bucket);
                         user.save();
                     }
                 });

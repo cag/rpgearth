@@ -9,6 +9,8 @@ module.exports = function(knex, User) {
             t.string('password_hash');
             t.float('latitude');
             t.float('longitude');
+            t.integer('latitude_bucket').index();
+            t.integer('longitude_bucket').index();
             t.timestamps();
         }).then(function() {
             User.register('alan', 'bacon');
