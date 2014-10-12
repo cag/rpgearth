@@ -58,16 +58,19 @@ io.on('connection', function(socket) {
 
                 function fixLatitudeBucket(v) { return v % (180 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
                 function fixLongitudeBucket(v) { return v % (360 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
+                
                 function forEachBucketInVicinity(lat_b, long_b, callback) {
                     if(lat_b !== null && long_b !== null)
                         for(var i = -1; i < 2; i++) {
                             for(var j = -1; j < 2; j++) {
-                                var bucket = fixLatitudeBucket(lat_b + i) + ',' + fixLongitudeBucket(long_b + j);
-                                callback(bucket);
+                                var lat_i = lat_b + i,
+                                    long_j = long_b + j,
+                                    bucket = fixLatitudeBucket(lat_i) + ',' + fixLongitudeBucket(long_j);
+                                callback(bucket, lat_i, long_j);
                             }
                         }
                     else
-                        callback(lat_b + ',' + long_b);
+                        callback(lat_b + ',' + long_b, lat_b, long_b);
                 }
 
                 function emitGeolocationBuckets(ev, obj) {
@@ -86,15 +89,15 @@ io.on('connection', function(socket) {
 
                 function shiftGeolocationBuckets() {
                     console.log('shifting from ' + last_latitude_bucket + ',' + last_longitude_bucket);
-                    forEachBucketInVicinity(last_latitude_bucket, last_longitude_bucket, function(bucket) {
-                        if(Math.abs(latitude_bucket - last_latitude_bucket) > 1 || Math.abs(longitude_bucket - last_longitude_bucket) > 1) {
+                    forEachBucketInVicinity(last_latitude_bucket, last_longitude_bucket, function(bucket, lat_i, long_j) {
+                        if(Math.abs(latitude_bucket - lat_i) > 1 || Math.abs(longitude_bucket - long_j) > 1) {
                             console.log('leaving ' + bucket);
                             io.to(bucket).emit('leave room', username);
                             socket.leave(bucket);
                         }
                     });
                     forEachBucketInVicinity(latitude_bucket, longitude_bucket, function(bucket) {
-                        if(Math.abs(latitude_bucket - last_latitude_bucket) > 1 || Math.abs(longitude_bucket - last_longitude_bucket) > 1) {
+                        if(Math.abs(lat_i - last_latitude_bucket) > 1 || Math.abs(long_j - last_longitude_bucket) > 1) {
                             console.log('joining ' + bucket);
                             socket.join(bucket);
                             io.to(bucket).emit('join room', username);
