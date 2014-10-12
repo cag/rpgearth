@@ -35,6 +35,8 @@ io.set('authorization', function(data, accept) {
     });
 });
 
+var GEOLOCATION_DEGREE_BUCKET_DILATION = 111; // Works out to about 1 sq km near the equator
+
 io.on('connection', function(socket) {
     var hs = socket.handshake;
     console.log('handshake: ' + JSON.stringify(hs));
@@ -44,7 +46,60 @@ io.on('connection', function(socket) {
 
         new User({ id: session.passport.user }).fetch().then(function(user) {
             if(user) {
-                var username = user.get('username')
+                var username = user.get('username'),
+                    last_latitude = user.get('latitude'),
+                    last_longitude = user.get('longitude'),
+                    last_latitude_bucket = user.get('latitude_bucket'),
+                    last_longitude_bucket = user.get('longitude_bucket'),
+                    latitude = last_latitude,
+                    longitude = last_longitude,
+                    latitude_bucket = last_latitude_bucket,
+                    longitude_bucket = last_longitude_bucket;
+
+                function fixLatitudeBucket(v) { return v % (360 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
+                function fixLongitudeBucket(v) { return v % (180 * GEOLOCATION_DEGREE_BUCKET_DILATION); }
+
+                function emitGeolocationBuckets(ev, obj) {
+                    if(latitude_bucket !== null && longitude_bucket !== null)
+                        for(var i = -1; i < 2; i++) {
+                            for(var j = -1; j < 2; j++) {
+                                io.to(fixLatitudeBucket(latitude_bucket + i) + ',' + fixLongitudeBucket(longitude_bucket + j))
+                                    .emit(ev, obj);
+                            }
+                        }
+                    else
+                        io.to(latitude_bucket + ',' + longitude_bucket).emit(ev, obj);
+                }
+
+                function joinGeolocationBuckets() {
+                    console.log('joining at ' + latitude_bucket + ',' + longitude_bucket);
+                    if(latitude_bucket !== null && longitude_bucket !== null)
+                        for(var i = -1; i < 2; i++) {
+                            for(var j = -1; j < 2; j++) {
+                                socket.join(fixLatitudeBucket(latitude_bucket + i) + ',' + fixLongitudeBucket(longitude_bucket + j));
+                            }
+                        }
+                    else
+                        socket.join(latitude_bucket + ',' + longitude_bucket);
+                }
+
+                function shiftGeolocationBuckets() {
+                    console.log('shifting from ' +
+                        last_latitude_bucket + ',' + last_longitude_bucket + ' to ' +
+                        latitude_bucket + ',' + longitude_bucket);
+                    if(latitude_bucket !== null && longitude_bucket !== null)
+                        for(var i = -1; i < 2; i++) {
+                            for(var j = -1; j < 2; j++) {
+                                socket.leave(fixLatitudeBucket(last_latitude_bucket + i) + ',' + fixLongitudeBucket(last_longitude_bucket + j));
+                            }
+                        }
+                    else
+                        socket.leave(latitude_bucket + ',' + longitude_bucket);
+                    joinGeolocationBuckets();
+                }
+
+                joinGeolocationBuckets();
+
                 console.log(username + ' connected');
 
                 socket.on('disconnect', function() {
@@ -52,18 +107,17 @@ io.on('connection', function(socket) {
                 });
                 socket.on('chat message', function(msg_body) {
                     console.log(username + ': ' + msg_body);
-                    io.emit('chat message', { username: username, body: msg_body });
+                    emitGeolocationBuckets('chat message', { username: username, body: msg_body });
                 });
                 socket.on('geolocation', function(position) {
                     if(position && position.coords) {
-                        var latitude = position.coords.latitude,
-                            longitude = position.coords.longitude,
-                            last_latitude = user.get('latitude'),
-                            last_longitude = user.get('longitude'),
-                            latitude_bucket = Math.floor((latitude + 360) * 111),
-                            longitude_bucket = Math.floor((longitude + 360) * 111),
-                            last_latitude_bucket = user.get('latitude_bucket'),
-                            last_longitude_bucket = user.get('longitude_bucket');
+                        latitude = position.coords.latitude;
+                        longitude = position.coords.longitude;
+                        latitude_bucket = Math.floor((latitude + 180) * GEOLOCATION_DEGREE_BUCKET_DILATION);
+                        longitude_bucket = Math.floor((longitude + 90) * GEOLOCATION_DEGREE_BUCKET_DILATION);
+
+                        if(last_latitude_bucket !== latitude_bucket || last_longitude_bucket !== longitude_bucket)
+                            shiftGeolocationBuckets();
 
                         console.log(username +
                             // ' (' + last_latitude + ',' + last_longitude +
