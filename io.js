@@ -131,6 +131,9 @@ io.on('connection', function(socket) {
                             ' (' + last_latitude + ',' + last_longitude +
                             ') -> (' + latitude + ',' + longitude + ')');
 
+                        last_latitude = latitude;
+                        last_longitude = longitude;
+
                         user.set('latitude', latitude);
                         user.set('longitude', longitude);
                         user.set('latitude_bucket', latitude_bucket);
