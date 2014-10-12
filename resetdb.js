@@ -10,8 +10,7 @@ module.exports = function(knex, Account) {
             t.timestamps();
         }).then(function() {
             bcrypt.hash('bacon', 10, function(err, hash) {
-                console.log('hash is ' + hash);
-                new Account({ username: 'alan', password_hash: hash}).save();
+                new Account({ username: 'alan', password_hash: hash }).save();
             });
         });
     });

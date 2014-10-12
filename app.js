@@ -43,12 +43,12 @@ passport.use(new LocalStrategy(
 ));
 
 passport.serializeUser(function(account, done) {
-  done(null, account.id);
+    done(null, account.get('id'));
 });
 
 passport.deserializeUser(function(id, done) {
-    new Account({ id: id }).fetch().then(function(err, user) {
-        done(err, user);
+    new Account({ id: id }).fetch().then(function(account) {
+        done(null, account);
     });
 });
 
